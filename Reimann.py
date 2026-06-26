@@ -18,8 +18,7 @@ def compute_approximation(method, n): #n subintervals, with the given method: 'l
     dx = (B - A) / n
     x_edges = np.linspace(A, B, n + 1)
 
-# try elif method == ...
-
-    return approx_value, x_edges 
-        # the numeric approximation and x-coords of the subinterval boundaries
-        # (used later for drawing the rectangles/trapezoids)
+# try: 
+# if method == "left": 
+# elif method === "right":
+# elif ...
