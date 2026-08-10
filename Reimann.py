@@ -19,28 +19,37 @@ B = 5.0
 
 EXACT_INTEGRAL = 44.0 / 3.0
 
-def compute_approximation(method, n): #n subintervals, with the given "method": 'left', 'right', 'mid', or 'trap'.
-    dx = (B - A) / n    # equal subintervals
-    x_edges = np.linspace(A, B, n + 1)  # x-coordinates of the subinterval boundaries
-
 
 
 # 2. try: 
 
-if method == "left": 
-    sample_points = x_edges[:-1]
-    heights = f(sample_points)
-    approx_value = np.sum(heights * dx)
-    
-elif method == "right":
-elif method == "center":
-elif method == "mid":
-elif method == "trap":
+def compute_approximation(method, n): #n subintervals, with the given "method": 'left', 'right', 'mid', or 'trap'.
+    dx = (B - A) / n    # equal subintervals
+    x_edges = np.linspace(A, B, n + 1)  # x-coordinates of the subinterval boundaries
+                                        # remember linspace needs ('begin', 'end', '# of points to generate')
+    if method == "left": 
+        sample_points = x_edges[:-1]    # all elements except last (this corresponds to "B")
+        heights = f(sample_points)      # remember that slice is [start:stop]
+        approx_value = np.sum(heights * dx)
+        
+    elif method == "right":
+        sample_points = x_edges[1:]     # drop the first one ("A")
+        heights = f(sample_points)
+        approx_value = np.sum(heights * dx)
 
-else:
-    raise ValueError(f"Unknown method: {method}")
+    elif method == "mid":
+        sample_points = (x_edges[:-1] + x_edges[1:]) / 2    # average
+        heights = f(sample_points)
+        approx_value = np.sum(heights * dx)
 
-return approx_value, x_edges
+    elif method == "trap":      # trapezoids have different "base" heights, so need y edges now
+        y_edges = f(x_edges)
+        approx_value = np.sum(dx * (y_edges[:-1] + y_edges[1:}]) / 2)
+
+    else:
+        raise ValueError(f"Unknown method: {method}")   # failsafe
+
+    return approx_value, x_edges
 
 
 
@@ -70,6 +79,63 @@ info_text = ax.text(
 )
 
 shape_patches = []
+
+
+
+# 3.1. Redraw rectangles & trapezoids + update info for multiple changes
+
+def redraw(method, n):  # remove last interation's rectangles/trapezoids
+    for patch in shape_patches:
+        patch.remove()
+    shape_patches.clear()
+
+    approx_value, x_edges = compute_approximation(method, n)
+    dx = x_edges[1] - x_edges[0]
+
+    if method == "trap":
+        y_edges = f(x_edges)
+        for i in range(n):      # draw the trapezoid using the 4 corners defined below
+            xs = [x_edges[i], x_edges[i+1], x_edges[i+1], x_edges[i]]
+            ys = [0, 0, y_edges[i+1], y_edges[i]]
+            patch = ax.fill(xs, ys, edgecolor="blue", facecolor="skyblue", alpha=0.5, linewidth=1)[0]
+            shape_patches.append(patch)     # defined patch to be used here. az.fill will draw/shade each trap. [0] pulls it out of the list
+
+    else:
+        for i in range(n):
+            left_edge = x_edges[i]
+            right_edge = xedges[i+1]
+
+            if method == "left":
+                height = f(left_edge)
+            elif method == "right":
+                height = f(right_edge)
+            else:       # method == "mid"
+                height = f((left_edge + right_edge) / 2)
+            
+            patch = ax.bar(left_edge, height, width=dx, align="edge", edgecolor="blue", facecolor="skyblue", alpha=0.5, linewidth=1)
+            shape_patches.append(patch)
+            # remember: ax.bar does rectangle 'start' 'height' 'width'. Align needed to start left edge there
+
+    # percent difference:
+    percent_error = abs(approx_value - EXACT_INTEGRAL) / EXACT_INTEGRAL * 100
+
+    # method labels
+    method_labels = {
+        "left": "Left Riemann Sum",
+        "right": "Right Riemann Sum",
+        "mid": "Midpoint Riemann Sum",
+        "trap": "Trapezoidal Rule",
+    }
+
+    info_text.set_text(
+        f"Method: {method_labels[metho]}\n"
+        f"n = {n}\n"
+        f"Approximation = {approx_value:.5f}\n" # {variable:.Nf} - N: decimal number
+        f"Percent error = {percent_error:.3f}%"
+    )
+
+    fig.canvas.draw_idle()
+
 
 
 
@@ -107,3 +173,9 @@ def on_method_change(label):
 
 n_textbox.on_submit(on_n_submit)
 method_radio.on_clicked(on_method_change)
+
+
+
+redraw("left", 4)   # to start it off
+
+plt.show()
