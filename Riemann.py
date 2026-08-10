@@ -44,7 +44,7 @@ def compute_approximation(method, n): #n subintervals, with the given "method": 
 
     elif method == "trap":      # trapezoids have different "base" heights, so need y edges now
         y_edges = f(x_edges)
-        approx_value = np.sum(dx * (y_edges[:-1] + y_edges[1:}]) / 2)
+        approx_value = np.sum(dx * (y_edges[:-1] + y_edges[1:]) / 2)
 
     else:
         raise ValueError(f"Unknown method: {method}")   # failsafe
@@ -103,7 +103,7 @@ def redraw(method, n):  # remove last interation's rectangles/trapezoids
     else:
         for i in range(n):
             left_edge = x_edges[i]
-            right_edge = xedges[i+1]
+            right_edge = x_edges[i+1]
 
             if method == "left":
                 height = f(left_edge)
@@ -128,7 +128,7 @@ def redraw(method, n):  # remove last interation's rectangles/trapezoids
     }
 
     info_text.set_text(
-        f"Method: {method_labels[metho]}\n"
+        f"Method: {method_labels[method]}\n"
         f"n = {n}\n"
         f"Approximation = {approx_value:.5f}\n" # {variable:.Nf} - N: decimal number
         f"Percent error = {percent_error:.3f}%"
