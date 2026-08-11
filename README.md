@@ -1,5 +1,5 @@
 # Riemann-Sum-Simulator
-Visualizes left, right, midpoint, trapezoidal, and Simpson's rule approximations of the definite integral of $f(x) = x^3 − 7x^2 + 15x − 8 on [1, 4].  Compares the approximation to the exact integral value and reports percent error, updating live as you adjust the subinterval count, $n$
+Visualizes left, right, midpoint, trapezoidal, and Simpson's rule approximations of the definite integral of $f(x) = x^3 − 7x^2 + 15x − 8$ on [1, 4].  Compares the approximation to the exact integral value and reports percent error, updating live as you adjust the subinterval count, $n$
 
 First version of this repo (file: Riemann_Quadratic.py) used a $f(x)$ with a constant second derivative and this muddled the overall trend of approximation accuracy that is important to demonstrate and understand. Specifically, the midpoint rule is surprisingly accurate on symmetric concave-down curves because of a fortuitous partial cancellation of the over-approximations and under-approximations. The trapezoidal rule on a concave-down curve always undershoots - so every trapezoid is missing a little sliver of area with no cancellation to compensate. This is confusing to students learning about the preference of the trapezoidal rule over Riemann sums in numeric approximations.
 
