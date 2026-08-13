@@ -35,7 +35,7 @@ $$
 \sum_{i=1}^n f(M_i)\Delta x=\frac{(b-a)}{n} \sum_{i=1}^n f(a+\frac{(b-a)}{n}i)
 $$
 
-Using *midpoint endpoints* finally, we sample $f(x)$ at the center of each subinterval rather than either edge, in order to slightly mitigate the issue of under/over-approximation. The midpoint of the $i$-th subinterval is the average of its left and right endpoints:
+Using *midpoints* finally, we sample $f(x)$ at the center of each subinterval rather than either edge, in order to slightly mitigate the issue of under/over-approximation. The midpoint of the $i$-th subinterval is the average of its left and right endpoints:
 
 $$
 S_{\text{mid}}(n)=\sum_{i=1}^n f(\bar{m}_i)\Delta x
