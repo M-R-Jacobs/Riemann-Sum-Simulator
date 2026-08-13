@@ -120,16 +120,168 @@ def redraw(n):  # handles all n updates, and will be called by the radio button 
 
     approx_value = {}   # storing each method's result in error panel
 
-    for i, method in enumerate(METHODS):    # draw shapes & collect approximations
+    # draw shapes & collect approximations
 
+    for i, method in enumerate(METHODS):    
+        ax = axes[i]
+        approx_value, x_edges = compute_approximation(method, n)
+        appox_values[method] = approx_value
+        dx = x_edges[1] - x_edges[0]
 
+        if method == "trap":    # trap and simp first, since more complicated
+            y_edges = f(x_edges)
+            for j in range(n):
+                xs = [x_edges[j], x_edges[j + 1], x_edges[j + 1], x_edges[j]]
+                ys = [0, 0, y_edges[j + 1], y_edges[j]]
+                patch = ax.fill(
+                    xs, ys,
+                    edgecolor="blue", 
+                    facecolor="lightblue", 
+                    alpha=0.5,
+                    linewidth=1
+                )[0]  # fill returns a list of patches, we want the first one
+                shape_patches[i].append(patch)
 
+        elif method == "simp":
+            for j in range(n):
+                x0 = x_edges[j]
+                x1 = x_edges[j + 1]
+                xm = (x0 + x1) / 2
+                x_arc = np.linspace(x0, x1, 30)     # 30 points to draw the parabola
+                f1, fm, fr = f(x0), f(xm), f(x1)
+                coeffs = np.polyfit([x0, xm, x1], [f1, fm, fr], 2)  # fit a quadratic polynomial
+                y_arc = np.polyval(coeffs, x_arc)   # evaluate the polynomial at the x_arc points
+                poly = ax.fill_between(
+                    x_arc, 0, y_arc,
+                    edgecolor="blue",
+                    facecolor="lightblue",
+                    alpha=0.5,
+                    linewidth=1
+                )
+                shape_patches[i].append(poly)
 
+        else:   # left, right, mid
+            for j in range(n):
+                x_left = x_edges[j]
+                x_right = x_edges[j + 1]
 
+                if method == "left":
+                    height = f(x_left)
+                elif method == "right":
+                    height = f(x_right)
+                else:  # midpoint
+                    height = f((x_left + x_right) / 2)
 
+                patch = ax.bar(     # remember: ax.bar does rectangle 'start' 'height' 'width'
+                    x_left, height,
+                    width=dx,
+                    align="edge",
+                    edgecolor="blue",
+                    facecolor="skyblue",
+                    alpha=0.5
+                    linewidth=1
+                )
+                shape_patches[i].append(patch)
 
+        pct_error = abs((approx_value - EXACT_INTEGRAL) / EXACT_INTEGRAL) * 100
+        for t in list(ax.texts):  # remove previous text annotations
+            t.remove()
+        ax.text(
+            0.97, 0.05,
+            f"≈ {approx_value:.3f} ({pct_error:.2f}%)",     # {variable:.Nf} - N: decimal number
+            transform=ax.transAxes,
+            fontsize=7,
+            ha="right",
+            va="bottom"
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="wheat", alpha=0.8)
+        )
 
+    # error bar panel update
+    ax_error.clear()
+    ax_error.axis("off")
+    ax_error.set_title("% Error by Method", fontsize=9)
 
+    bar_max = 10.0      # bars fill 0-10%
+    bar_left = 0.32     # x position where bars start (in axes fraction)
+    bar_right = 0.98    # x position where bars end (full = 10%)
+    bar_width = bar_right - bar_left
+    row_height = 1 / 6  # vertical spacing per row
+
+    method_labels = ["Left", "Right", "Midpoint", "Trapezoid", "Simpson"]
+
+    for i, method in enumerate(METHODS):
+        pct_error = abs((approx_value[method] - EXACT_INTEGRAL) / EXACT_INTEGRAL) * 100
+        y_center = 1 - (i + 0.8) * row_height   # vertical postion for this row
+
+        # Method names on left
+        ax_error.text(
+            0.0, y_center,
+            method_labels[i],
+            transform=ax_err.transAxes,
+            fontsize=8,
+            va="center",
+        )
+
+        # % error number, just before bar
+        ax_error.text(
+            bar_left - 0.02, y_center,
+            f"{pct_error:.2f}%",
+            transform=ax_err.transAxes,
+            fontsize=7,
+            va="center",
+            ha="right"
+        )
+
+        if pct_error >= bar_max:    # want to fill bar and add arrowhead
+            fill_width = bar_width
+            bar_color = "red"
+            rect = mpatches.FancyBboxPatch(
+                (bar_left, y_center - 0.025), fill_width, 0.05,
+                boxstyle="square,pad=0",
+                transform=ax_err.transAxes,
+                facecolor=bar_color,
+                edgecolor="none"
+            )
+            ax_error.add_patch(rect)
+
+            ax_error.text(
+                bar_right + 0.01, y_center, "▶",    # Don't know how to make a triangle, so just use a right-pointing arrow character
+                transform=ax_error.transAxes,
+                fontsize=8,
+                va="center",
+                color=bar_color
+            )   
+        else:   # all other partial fills
+            fill_width = (pct_error / bar_max) * bar_width
+            track = mpatches.FancyBboxPatch(
+                (bar_left, y_center - 0.025), bar_width, 0.05,
+                boxstyle="square,pad=0",
+                transform=ax_error.transAxes,
+                facecolor="lightgray",
+                edgecolor="none"
+            )
+            ax_error.add_patch(track)
+
+            bar = mpatches.FancyBboxPatch(
+                (bar_left, y_center - 0.025), fill_width, 0.05,
+                boxstyle="square,pad=0",
+                transform=ax_error.transAxes,
+                facecolor="blue",
+                edgecolor="none"
+            )
+            ax_error.add_patch(bar)
+
+    ax_error.text(
+        0.5, 0.05,
+        f"Exact Integral = {EXACT_INTEGRAL}",
+        transform=ax_error.transAxes,
+        fontsize=8,
+        ha="center",
+        va="center",
+        bbox=dict(boxstyle="round,pad=0.3", facecolor="wheat", alpha=0.8)
+    )
+
+    fig.canvas.draw_idle()   # refresh the figure to show the new shapes and error bars
 
 
 
