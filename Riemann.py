@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as mpatches    # for new error bar idea
 from matplotlib.widgets import TextBox, RadioButtons
 
 
@@ -9,15 +10,16 @@ from matplotlib.widgets import TextBox, RadioButtons
 # 1. Define the function
 
 def f(x):
-    return -(x - 3)**2 + 5
+    return x**3 - 7*x**2 + 15*x - 8
+    # Equivalent factored form, as a note: (x-2)^3 - (x-2)^2 - (x-2) + 2
 
 A = 1.0
-B = 5.0 
+B = 4.0 
     # Hard-coded integration bounds [A,B]. Keeping these as named constants for later.
     # The real integral is not completed in the code since it is trivial. The value of
     # 44/3 computed in the ReadMe is simply displayed and compared against.
 
-EXACT_INTEGRAL = 44.0 / 3.0
+EXACT_INTEGRAL = 21.0 / 4.0 # =5.25
 
 
 
