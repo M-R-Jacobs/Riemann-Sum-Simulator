@@ -1,11 +1,25 @@
 # Riemann-Sum-Simulator
-Visualizes left, right, midpoint, trapezoidal, and Simpson's rule approximations of the definite integral of $f(x) = x^3 − 7x^2 + 15x − 8$ on [1, 4].  Compares the approximation to the exact integral value and reports percent error, updating live as you adjust the subinterval count, $n$
+Visualizes left, right, midpoint, trapezoidal, and Simpson's rule approximations of the definite integral of $f(x) = \frac{1}{4} x·sin(x) + 2$ on [1, 8].  Compares the approximation to the exact integral value and reports percent error, updating live as you adjust the subinterval count, $n$
 
-First version of this repo (file: Riemann_Quadratic.py) used a $f(x)$ with a constant second derivative and this muddled the overall trend of approximation accuracy that is important to demonstrate and understand. Specifically, the midpoint method outperformed the trapezoidal rule - the midpoint rule is surprisingly accurate on symmetric concave-down curves because of a fortuitous partial cancellation of the over-approximations and under-approximations. The trapezoidal rule on a concave-down curve always undershoots - so every trapezoid is missing a little sliver of area with no cancellation to compensate. This is confusing to students learning about the preference of the trapezoidal rule over Riemann sums in numeric approximations.
+---
 
-To better incorporate the primary emphasis of this project into the repo, $f(x)$ was made into a more complicated, cubic function with defined and non-constant first and second derivative functions and regions of different concavity in the interval [1, 4]. Furthermore, Simpson's rule was also added, the display shows all 5 methods now (no more clicking between them) with $n$ adjusting all at once, and comparative data for the purpose of developing intuition is displayed in the same location for all 5 graphs.
+First version of this repo (file: Riemann_Quadratic.py) used a $f(x)$ that was symmetric about x=3 on [1,5] with a constant second derivative and this in several ways either produced boring/trivial results or muddled the overall trend of approximation accuracy that is important to demonstrate and understand. Cubic functions mitigate some of these anomalies and were implanted in a second version, but they presented their own problems. Specifically (for both original versions):
+- Constant second derivatives meant midpoint and trapezoidal errors canceled or compounded in a perfectly predictable way every time
+- Symmetry about x=3 on [1,5] (the quadratic version) meant left and right Riemann sums always produce identical errors (just opposite sign)
+- Simpson's rule is exact over quadratics and cubic functions, making the error panel pointless for it
+- Only one sign change in concavity (in the cubic version) produced somewhat predictable results
 
-Here is some information about each method. This does not necessarily reflect the approach committed in the code, but serves as the mathematical basis:
+To better incorporate the primary emphasis of this project into the repo, $f(x)$ was made into a more complicated, transcendental function with defined and non-constant first, second, and third derivative functions and regions of different concavity in the interval [1, 8]. With the current $f(x)$, multiple concavity changes across [1,8] produce varying errors that are interesting for to students to observe.
+
+Furthermore, in the second and third/final versions, Simpson's rule was also added, the display shows all 5 methods now (no more clicking between them) with $n$ adjusting all at once, and comparative data for the purpose of developing intuition is displayed in the same location for all 5 graphs for easy comparing. Simpson's rule approximates lower-order functions (like quadratic and cubic functions) exactly, making the error theoretically zero for any polynomial up to degree 3 - another reason that a transcendental function was chosen.
+
+It should also be noted that, for any smooth function, midpoint is generally order $h^2=\Big(\frac{b-a}{n}\Big)^2$ accurate (same as trapezoidal), and the error constant is actually half as large, so midpoint wins by a factor of 2 consistently. For the midpoint rule the first-order error term in the Taylor series vanishes by symmetry (odd powers of $(x-m)$ integrate to zero over a symmetric interval) leaving a leading error of $f''(m)\frac{h^3}{24}$ per strip, while the trapezoidal rule gives $-f''(m)\frac{h^3}{12}$ per strip, exactly twice as large in magnitude. This was an issue that could not be avoided.
+
+Future ideas to improve this project could include a reintroduction of a selection panel, where the user navigates between different functions to note the approximation differences in polynomial, exponential, or non-elementary functions.
+
+---
+
+Here is some information about each method. This does not necessarily perfectly reflect the approach committed in the code, but serves as the mathematical basis:
 
 **1. Reimann Sums (Left, Right, and Midpoint)**
 
@@ -57,6 +71,8 @@ $$
 
 **2. The Trapezoidal Rule**
 
+Programs like MATLAB use the trapezoidal rule in trapz functions to do integral analysis, as they work for any continuous or discrete, defined curve established by any set of arbitrary data points; it only needs function values at the endpoints of each strip, which works even when you don't have a formula for f(x). This so called "numerical integration" is useful to avoid tremendous labor or cleverness when elementary functions simply do not have antiderivatives that themselves are elementary functions.
+
 A trapezoid is a quadrilateral with one pair of parallel sides ($b_1$ and $b_2$) of different lengths connected by two sides that are not parallel and do not necessarily have an angular or symmetrical relationship to one another. If they did, it would be a "regular trapezoid" which we do not use here. In the area approximation under curves, the parallel bases are oriented vertically and act as the height of the function at two points separated by one subinterval - $f(x_{i=k})$ and $f(x_{i=k+1})$. One of the two remaining sides acts as the perpendicular distance between them (the "height" or altitude $h$ of the trapezoid itself) - this is $\Delta x=\frac{b-a}{n}$. The fourth is merely drawn between the two function-side endpoints of the heights and is not important in the calculation of the area, which for a trapezoid is:
 
 $$
@@ -83,9 +99,9 @@ $$
 
 **3. Simpson's Rule**
 
-Just like the trapezoidal rule - this is a more advanced method of numerical integration that is resorted to when elementary functions simply do not have antiderivatives that are elementary functions. Programs like MATLAB use trapz functions to do integral analysis for instance, as they work for any continuous, defined curve. The difference between trapezoidal approximation and the method used in Simpon's rule is the order of the approximation of $f(x)$ - first-degree polynomials in the former, and second-degree polynomials in the latter - the idea being that a parabola hugs the curve more closely than a flat rectangle top or a straight trapezoid edge, so the error is smaller.
+Just like the trapezoidal rule - this is a more advanced method of numerical integration that is resorted to when elementary functions don't have antiderivatives that are elementary functions. The difference between the trapezoidal approximation and the method used in Simpon's rule is the order of the approximation of $f(x)$ - first-degree polynomials in the former, and second-degree polynomials in the latter - the idea being that a parabola hugs the curve more closely than a flat rectangle top or a straight trapezoid edge, so the error is smaller.
 
-We use the general formula for a quadratic $p(x) = Ax^2 + Bx + C$ that passes through the three points $(x_{i-1}, f(x_{i-1}))$, $(x_i, f(x_i))$, and $(x_{i+1}, f(x_{i+1}))$ - or at the start of the interval, $(x_0, f(x_0))$, $(x_1, f(x_1))$, and $(x_2, f(x_2))$. Since three points uniquely determine a parabola, this fit is exact - but we then have to use subinterval pairs $[x_{i-1}, x_{i+1}]$ (or $[x_0, x_2]$) with even $n$ as a result. We then integrate $p(x)$ over that pair of subintervals rather than $f(x)$ itself. That is the gist.
+To get to a general expression for this rule, we use the general formula for a quadratic $p(x) = Ax^2 + Bx + C$ that passes through the three points $(x_{i-1}, f(x_{i-1}))$, $(x_i, f(x_i))$, and $(x_{i+1}, f(x_{i+1}))$ - or at the start of the interval, $(x_0, f(x_0))$, $(x_1, f(x_1))$, and $(x_2, f(x_2))$. Since three points uniquely determine a parabola, this fit is exact - but we then have to use subinterval pairs $[x_{i-1}, x_{i+1}]$ (or $[x_0, x_2]$) with even $n$ as a result. We then integrate $p(x)$ over that pair of subintervals rather than $f(x)$ itself. That is the gist.
 
 $$
 \int_{x_0}^{x_2} f(x)dx \approx \int_{x_0}^{x_2} p(x)dx
@@ -106,7 +122,7 @@ $$
 Just as with the trapezoidal rule, every interior boundary point is shared between two adjacent pairs. Expanding the sum and collecting repeated terms - endpoints appear once, odd-indexed points always land on a midpoint so they carry weight 4, even-indexed interior points appear as an endpoint in two adjacent pairs so they carry weight 2, creating the signature alternating 4-2-4-2-4 interior weighting:
 
 $$
-S_{\text{simp}}(n) = \frac{b-a}{3n}[f(x_0) + 4f(x_1) + 2f(x_2) + 4f(x_3) + ~...~ + 2f(x_{n-2}) + 4f(x_{n-1}) + f(x_n)]
+S_{\text{simp}}(n) = \frac{\Delta x}{3}[f(x_0) + 4f(x_1) + 2f(x_2) + 4f(x_3) + ~...~ + 2f(x_{n-2}) + 4f(x_{n-1}) + f(x_n)]
 $$
 
 This converges to the true integral faster than any of the rectangle methods or the trapezoidal rule as $n$ increases, because the error depends on the fourth derivative of $f$ rather than the second — meaning smooth functions are approximated almost exactly even at modest $n$. The user can see this in the Python simulation data section.
