@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.pyplot as mpatches    # for new error bar idea
+import matplotlib.patches as mpatches    # for new error bar idea
 from matplotlib.widgets import TextBox, Button
 
 
@@ -48,9 +48,11 @@ def compute_approximation(method, n): # n subintervals, with the given "method":
         y_edges = f(x_edges)
         approx_value = np.sum(dx * (y_edges[:-1] + y_edges[1:]) / 2)    # A = 1/2 * (b1 + b2) * h, where b1 and b2 are y_edges, and h is dx
 
-    elif method == "simpson":   # Simpson's rule requires an even number of subintervals, so n must be even
+    elif method == "simp":   # Simpson's rule requires an even number of subintervals, so n must be even
         if n % 2 != 0:      # modulo operator - returns the remainder after division. 0 even, 1 off. != 0 "not equal to 0"
-            raise ValueError("Simpson's rule requires n to be even).")
+            n = n - 1   # make it even, but compute, dx, x_edges need adjusting (from the top of the function) too:
+            dx = (B - A) / n
+            x_edges = np.linspace(A, B, n + 1)
         x_midpoints = (x_edges[:-1] + x_edges[1:]) / 2
         y_edges = f(x_edges)
         y_midpoints = f(x_midpoints)
@@ -89,7 +91,7 @@ TITLES = [
 for i, ax in enumerate(axes[:5]):   # only the first 5 axes are used for the plots, the last one is for data
     ax.plot(x_smooth, y_smooth, color="black", linewidth=1.5)
     ax.set_title(TITLES[i], fontsize=9)
-    ax.set_xlim(A - 1, B + 1)
+    ax.set_xlim(A - 0.5, B + 0.5)
     ax.set_ylim(0, 5)
     ax.axhline(0, color="black", linewidth=1)   # x-axis
     ax.axvline(0, color="black", linewidth=1)   # y-axis
@@ -118,14 +120,14 @@ def redraw(n):  # handles all n updates, and will be called by the radio button 
             patch.remove()
         shape_patches[i].clear()
 
-    approx_value = {}   # storing each method's result in error panel
+    approx_values = {}   # storing each method's result in error panel
 
     # draw shapes & collect approximations
 
     for i, method in enumerate(METHODS):    
         ax = axes[i]
         approx_value, x_edges = compute_approximation(method, n)
-        appox_values[method] = approx_value
+        approx_values[method] = approx_value
         dx = x_edges[1] - x_edges[0]
 
         if method == "trap":    # trap and simp first, since more complicated
@@ -142,7 +144,37 @@ def redraw(n):  # handles all n updates, and will be called by the radio button 
                 )[0]  # fill returns a list of patches, we want the first one
                 shape_patches[i].append(patch)
 
-        elif method == "simp":
+        elif method == "simp" and n % 2 != 0:   # Simpson's reroute if n is odd
+            n_even = n - 1
+            dx = (B - A) / n_even
+            x_edges = np.linspace(A, B, n_even + 1)
+            ax.text(
+                0.5, 0.92,
+                f"Simpson's rule requires n = even. Using n={n_even} instead.",
+                transform=ax.transAxes,
+                fontsize=7,
+                ha="center",
+                va="top"
+            )
+
+            for j in range(n_even):
+                x0 = x_edges[j]
+                x1 = x_edges[j + 1]
+                xm = (x0 + x1) / 2
+                x_arc = np.linspace(x0, x1, 30)     # 30 points to draw the parabola
+                f1, fm, fr = f(x0), f(xm), f(x1)
+                coeffs = np.polyfit([x0, xm, x1], [f1, fm, fr], 2)  # fit a quadratic polynomial
+                y_arc = np.polyval(coeffs, x_arc)   # evaluate the polynomial at the x_arc points
+                poly = ax.fill_between(
+                    x_arc, 0, y_arc,
+                    edgecolor="blue",
+                    facecolor="lightblue",
+                    alpha=0.5,
+                    linewidth=1
+                )
+                shape_patches[i].append(poly)
+
+        elif method == "simp":      # also just handles the case when n is even normally
             for j in range(n):
                 x0 = x_edges[j]
                 x1 = x_edges[j + 1]
@@ -178,7 +210,7 @@ def redraw(n):  # handles all n updates, and will be called by the radio button 
                     align="edge",
                     edgecolor="blue",
                     facecolor="skyblue",
-                    alpha=0.5
+                    alpha=0.5,
                     linewidth=1
                 )
                 shape_patches[i].append(patch)
@@ -192,7 +224,7 @@ def redraw(n):  # handles all n updates, and will be called by the radio button 
             transform=ax.transAxes,
             fontsize=7,
             ha="right",
-            va="bottom"
+            va="bottom",
             bbox=dict(boxstyle="round,pad=0.3", facecolor="wheat", alpha=0.8)
         )
 
@@ -210,14 +242,14 @@ def redraw(n):  # handles all n updates, and will be called by the radio button 
     method_labels = ["Left", "Right", "Midpoint", "Trapezoid", "Simpson"]
 
     for i, method in enumerate(METHODS):
-        pct_error = abs((approx_value[method] - EXACT_INTEGRAL) / EXACT_INTEGRAL) * 100
+        pct_error = abs((approx_values[method] - EXACT_INTEGRAL) / EXACT_INTEGRAL) * 100
         y_center = 1 - (i + 0.8) * row_height   # vertical postion for this row
 
         # Method names on left
         ax_error.text(
             0.0, y_center,
             method_labels[i],
-            transform=ax_err.transAxes,
+            transform=ax_error.transAxes,
             fontsize=8,
             va="center",
         )
@@ -226,7 +258,7 @@ def redraw(n):  # handles all n updates, and will be called by the radio button 
         ax_error.text(
             bar_left - 0.02, y_center,
             f"{pct_error:.2f}%",
-            transform=ax_err.transAxes,
+            transform=ax_error.transAxes,
             fontsize=7,
             va="center",
             ha="right"
@@ -238,7 +270,7 @@ def redraw(n):  # handles all n updates, and will be called by the radio button 
             rect = mpatches.FancyBboxPatch(
                 (bar_left, y_center - 0.025), fill_width, 0.05,
                 boxstyle="square,pad=0",
-                transform=ax_err.transAxes,
+                transform=ax_error.transAxes,
                 facecolor=bar_color,
                 edgecolor="none"
             )
